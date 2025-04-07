@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Canvas Game</title>
+    <title>Car Game</title>
     <style>
         body {
             background-color: #F8F3A9;
@@ -12,15 +12,50 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
+            touch-action: none; 
+            position: relative; 
         }
 
         canvas {
             border-radius: .4em;
         }
+
+        .button {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border: none;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            font-size: 20px;
+            text-align: center;
+            line-height: 100px;
+        }
+
+        #accelerate {
+            bottom: 20px;
+            left: 20px;
+        }
+
+        #left {
+            bottom: 20px;
+            right: 140px;
+        }
+
+        #right {
+            bottom: 20px;
+            right: 20px;
+        }
     </style>
 </head>
 <body>
     <canvas height="450" width="750"></canvas>
+    <button id="accelerate" class="button">Gas</button>
+    <button id="left" class="button">Left</button>
+    <button id="right" class="button">Right</button>
+
     <script>
         var $ = {
             canvas: null,
@@ -82,8 +117,28 @@
         $.canvas2.width = $.canvas.width;
         $.canvas2.height = $.canvas.height;
         $.ctx2 = $.canvas2.getContext('2d');
-        window.addEventListener("keydown", keyDown, false);
-        window.addEventListener("keyup", keyUp, false);
+
+        // Обработчики событий для кнопок
+        document.getElementById('accelerate').addEventListener('mousedown', function() {
+            $.state.keypress.up = true;
+        });
+        document.getElementById('accelerate').addEventListener('mouseup', function() {
+            $.state.keypress.up = false;
+        });
+
+        document.getElementById('left').addEventListener('mousedown', function() {
+            $.state.keypress.left = true;
+        });
+        document.getElementById('left').addEventListener('mouseup', function() {
+            $.state.keypress.left = false;
+        });
+
+        document.getElementById('right').addEventListener('mousedown', function() {
+            $.state.keypress.right = true;
+        });
+        document.getElementById('right').addEventListener('mouseup', function() {
+            $.state.keypress.right = false;
+        });
 
         drawBg();
         draw();
@@ -230,36 +285,6 @@
             }
 
             $.state.xpos = clamp($.state.xpos, -650, 650);
-        }
-
-        function keyUp(e) {
-            move(e, false);
-        }
-
-        function keyDown(e) {
-            move(e, true);
-        }
-
-        function move(e, isKeyDown) {
-            if (e.keyCode >= 37 && e.keyCode <= 40) {
-                e.preventDefault();
-            }
-
-            if (e.keyCode === 37) {
-                $.state.keypress.left = isKeyDown;
-            }
-
-            if (e.keyCode === 38) {
-                $.state.keypress.up = isKeyDown;
-            }
-
-            if (e.keyCode === 39) {
-                $.state.keypress.right = isKeyDown;
-            }
-
-            if (e.keyCode === 40) {
-                $.state.keypress.down = isKeyDown;
-            }
         }
 
         function randomRange(min, max) {
