@@ -18,21 +18,25 @@
 
         canvas {
             border-radius: .4em;
+            width: 100%; /* Адаптивная ширина */
+            height: auto; /* Автоматическая высота */
         }
 
         .button {
             position: absolute;
-            width: 100px;
-            height: 100px;
+            width: 15vw; /* Ширина кнопок в процентах от ширины экрана */
+            height: 15vw; /* Высота кнопок в процентах от ширины экрана */
+            min-width: 100px; /* Минимальная ширина */
+            min-height: 100px; /* Минимальная высота */
             border: none;
             border-radius: 50%;
             background-color: rgba(255, 255, 255, 0.8);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             cursor: pointer;
-            font-size: 20px;
+            font-size: 5vw; /* Размер шрифта в процентах от ширины экрана */
             text-align: center;
-            line-height: 100px;
-            user-select: none;
+            line-height: 15vw; /* Центрируем текст */
+            user-select: none; /* Отключаем выделение текста */
         }
 
         #accelerate {
@@ -48,6 +52,16 @@
         #right {
             bottom: 20px;
             right: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .button {
+                width: 20vw; /* Увеличиваем размер кнопок на маленьких экранах */
+                height: 20vw;
+                min-width: 80px; /* Уменьшаем минимальный размер */
+                min-height: 80px;
+                font-size: 6vw; /* Увеличиваем размер шрифта */
+            }
         }
     </style>
 </head>
@@ -129,11 +143,11 @@
                 $.state.keypress[keypressProperty] = false;
             });
             button.addEventListener('touchstart', function(e) {
-                e.preventDefault();
+                e.preventDefault(); // Отключаем стандартные действия
                 $.state.keypress[keypressProperty] = true;
             });
             button.addEventListener('touchend', function(e) {
-                e.preventDefault();
+                e.preventDefault(); // Отключаем стандартные действия
                 $.state.keypress[keypressProperty] = false;
             });
         }
