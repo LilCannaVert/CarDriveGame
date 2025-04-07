@@ -32,6 +32,7 @@
             font-size: 20px;
             text-align: center;
             line-height: 100px;
+            user-select: none;
         }
 
         #accelerate {
@@ -52,9 +53,9 @@
 </head>
 <body>
     <canvas height="450" width="750"></canvas>
-    <button id="accelerate" class="button">Gas</button>
-    <button id="left" class="button">Left</button>
-    <button id="right" class="button">Right</button>
+    <button id="accelerate" class="button">Ускорение</button>
+    <button id="left" class="button">Влево</button>
+    <button id="right" class="button">Вправо</button>
 
     <script>
         var $ = {
@@ -119,26 +120,27 @@
         $.ctx2 = $.canvas2.getContext('2d');
 
         // Обработчики событий для кнопок
-        document.getElementById('accelerate').addEventListener('mousedown', function() {
-            $.state.keypress.up = true;
-        });
-        document.getElementById('accelerate').addEventListener('mouseup', function() {
-            $.state.keypress.up = false;
-        });
+        function setButtonListeners(buttonId, keypressProperty) {
+            const button = document.getElementById(buttonId);
+            button.addEventListener('mousedown', function() {
+                $.state.keypress[keypressProperty] = true;
+            });
+            button.addEventListener('mouseup', function() {
+                $.state.keypress[keypressProperty] = false;
+            });
+            button.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                $.state.keypress[keypressProperty] = true;
+            });
+            button.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                $.state.keypress[keypressProperty] = false;
+            });
+        }
 
-        document.getElementById('left').addEventListener('mousedown', function() {
-            $.state.keypress.left = true;
-        });
-        document.getElementById('left').addEventListener('mouseup', function() {
-            $.state.keypress.left = false;
-        });
-
-        document.getElementById('right').addEventListener('mousedown', function() {
-            $.state.keypress.right = true;
-        });
-        document.getElementById('right').addEventListener('mouseup', function() {
-            $.state.keypress.right = false;
-        });
+        setButtonListeners('accelerate', 'up');
+        setButtonListeners('left', 'left');
+        setButtonListeners('right', 'right');
 
         drawBg();
         draw();
