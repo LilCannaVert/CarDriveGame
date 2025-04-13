@@ -18,25 +18,25 @@
 
         canvas {
             border-radius: .4em;
-            width: 100%; /* Адаптивная ширина */
-            height: auto; /* Автоматическая высота */
+            width: 100%; 
+            height: auto; 
         }
 
         .button {
             position: absolute;
-            width: 15vw; /* Ширина кнопок в процентах от ширины экрана */
-            height: 15vw; /* Высота кнопок в процентах от ширины экрана */
-            min-width: 100px; /* Минимальная ширина */
-            min-height: 100px; /* Минимальная высота */
+            width: 15vw; 
+            height: 15vw; 
+            min-width: 100px; 
+            min-height: 100px; 
             border: none;
             border-radius: 50%;
             background-color: rgba(255, 255, 255, 0.8);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             cursor: pointer;
-            font-size: 5vw; /* Размер шрифта в процентах от ширины экрана */
+            font-size: 5vw; 
             text-align: center;
-            line-height: 15vw; /* Центрируем текст */
-            user-select: none; /* Отключаем выделение текста */
+            line-height: 15vw; 
+            user-select: none;
         }
 
         #accelerate {
@@ -56,11 +56,11 @@
 
         @media (max-width: 600px) {
             .button {
-                width: 20vw; /* Увеличиваем размер кнопок на маленьких экранах */
+                width: 20vw; 
                 height: 20vw;
-                min-width: 80px; /* Уменьшаем минимальный размер */
+                min-width: 80px; 
                 min-height: 80px;
-                font-size: 6vw; /* Увеличиваем размер шрифта */
+                font-size: 6vw; 
             }
         }
     </style>
@@ -120,7 +120,10 @@
                     left: false,
                     right: false,
                     down: false
-                }
+                },
+                distanceTraveled: 0,
+                dayNightCycleDistance: 5000,
+                isNight: false
             },
             storage: {
                 bg: null
@@ -143,14 +146,44 @@
                 $.state.keypress[keypressProperty] = false;
             });
             button.addEventListener('touchstart', function(e) {
-                e.preventDefault(); // Отключаем стандартные действия
+                e.preventDefault(); 
                 $.state.keypress[keypressProperty] = true;
             });
             button.addEventListener('touchend', function(e) {
-                e.preventDefault(); // Отключаем стандартные действия
+                e.preventDefault(); 
                 $.state.keypress[keypressProperty] = false;
             });
         }
+
+        window.addEventListener('keydown', function(e) {
+            switch (e.code) {
+                case 'ArrowUp':
+                case 'Space':
+                    $.state.keypress.up = true; 
+                    break;
+                case 'ArrowLeft':
+                    $.state.keypress.left = true; 
+                    break;
+                case 'ArrowRight':
+                    $.state.keypress.right = true; 
+                    break;
+            }
+        });
+
+        window.addEventListener('keyup', function(e) {
+            switch (e.code) {
+                case 'ArrowUp':
+                case 'Space':
+                    $.state.keypress.up = false; 
+                    break;
+                case 'ArrowLeft':
+                    $.state.keypress.left = false; 
+                    break;
+                case 'ArrowRight':
+                    $.state.keypress.right = false; 
+                    break;
+            }
+        });
 
         setButtonListeners('accelerate', 'up');
         setButtonListeners('left', 'left');
@@ -258,6 +291,15 @@
 
             $.state.xpos -= ($.state.currentCurve * $.state.speed) * 0.005;
 
+            $.state.distanceTraveled += $.state.speed;
+
+            if ($.state.distanceTraveled >= $.state.dayNightCycleDistance) {
+                $.state.isNight = !$.state.isNight;
+                $.state.distanceTraveled = 0;
+                updateColors();
+                drawBg();
+            }
+
             if ($.state.speed) {
                 if ($.state.keypress.left) {
                     $.state.xpos += (Math.abs($.state.turn) + 7 + ($.state.speed > $.state.car.maxSpeed / 4 ? ($.state.car.maxSpeed - ($.state.speed / 2)) : $.state.speed)) * 0.2;
@@ -301,6 +343,24 @@
             }
 
             $.state.xpos = clamp($.state.xpos, -650, 650);
+        }
+
+        function updateColors() {
+            if ($.state.isNight) {
+                $.colors.sky = "#4B0082"; 
+                $.colors.mountains = "#1A1A4D"; 
+                $.colors.ground = "#2E2E2E"; 
+                $.colors.groundDark = "#1A1A1A"; 
+                $.colors.road = "#333333"; 
+                $.colors.roadLine = "#FFF"; 
+            } else {
+                $.colors.sky = "#D4F5FE"; 
+                $.colors.mountains = "#83CACE"; 
+                $.colors.ground = "#8FC04C"; 
+                $.colors.groundDark = "#73B043"; 
+                $.colors.road = "#606a7c"; 
+                $.colors.roadLine = "#FFF"; 
+            }
         }
 
         function randomRange(min, max) {
