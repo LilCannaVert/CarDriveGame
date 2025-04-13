@@ -70,13 +70,26 @@
     <button id="accelerate" class="button">GO</button>
     <button id="left" class="button">L</button>
     <button id="right" class="button">R</button>
+    <audio id="carSound" src="https://silver-perfect-barracuda-186.mypinata.cloud/ipfs/bafybeifil3h5sqoh2n2afehjvlgg5jidq54i35i6j7cls75ucvss32txnu" preload="auto" loop></audio>
 
     <script>
+        // Инициализируем аудио контекст при взаимодействии пользователя
+        document.addEventListener('click', initAudio, { once: true });
+        document.addEventListener('keydown', initAudio, { once: true });
+        document.addEventListener('touchstart', initAudio, { once: true });
+
+        function initAudio() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const audio = document.getElementById('carSound');
+            audio.volume = 0.5; // Устанавливаем громкость на 50%
+        }
+
         var $ = {
             canvas: null,
             ctx: null,
             canvas2: null,
             ctx2: null,
+            audio: null,
             colors: {
                 sky: "#D4F5FE",
                 mountains: "#83CACE",
@@ -122,36 +135,69 @@
                     down: false
                 },
                 distanceTraveled: 0,
+                totalDistance: 0,
                 dayNightCycleDistance: 10000,
-                isNight: false
+                isNight: false,
+                soundPlaying: false
             },
             storage: {
                 bg: null
             }
         };
+
         $.canvas = document.getElementsByTagName('canvas')[0];
         $.ctx = $.canvas.getContext('2d');
         $.canvas2 = document.createElement('canvas');
         $.canvas2.width = $.canvas.width;
         $.canvas2.height = $.canvas.height;
         $.ctx2 = $.canvas2.getContext('2d');
+        $.audio = document.getElementById('carSound');
+
+        // Функция для управления звуком
+        function handleAccelerateSound(isAccelerating) {
+            if (isAccelerating && !$.state.soundPlaying) {
+                try {
+                    $.audio.currentTime = 0;
+                    const playPromise = $.audio.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(error => {
+                            console.log("Audio play failed:", error);
+                        });
+                    }
+                    $.state.soundPlaying = true;
+                } catch (error) {
+                    console.log("Error playing audio:", error);
+                }
+            } else if (!isAccelerating && $.state.soundPlaying) {
+                try {
+                    $.audio.pause();
+                    $.state.soundPlaying = false;
+                } catch (error) {
+                    console.log("Error pausing audio:", error);
+                }
+            }
+        }
 
         // Обработчики событий для кнопок
         function setButtonListeners(buttonId, keypressProperty) {
             const button = document.getElementById(buttonId);
             button.addEventListener('mousedown', function() {
                 $.state.keypress[keypressProperty] = true;
+                if (keypressProperty === 'up') handleAccelerateSound(true);
             });
             button.addEventListener('mouseup', function() {
                 $.state.keypress[keypressProperty] = false;
+                if (keypressProperty === 'up') handleAccelerateSound(false);
             });
             button.addEventListener('touchstart', function(e) {
                 e.preventDefault(); 
                 $.state.keypress[keypressProperty] = true;
+                if (keypressProperty === 'up') handleAccelerateSound(true);
             });
             button.addEventListener('touchend', function(e) {
                 e.preventDefault(); 
                 $.state.keypress[keypressProperty] = false;
+                if (keypressProperty === 'up') handleAccelerateSound(false);
             });
         }
 
@@ -159,7 +205,10 @@
             switch (e.code) {
                 case 'ArrowUp':
                 case 'Space':
-                    $.state.keypress.up = true; 
+                    if (!$.state.keypress.up) {
+                        $.state.keypress.up = true;
+                        handleAccelerateSound(true);
+                    }
                     break;
                 case 'ArrowLeft':
                     $.state.keypress.left = true; 
@@ -174,7 +223,8 @@
             switch (e.code) {
                 case 'ArrowUp':
                 case 'Space':
-                    $.state.keypress.up = false; 
+                    $.state.keypress.up = false;
+                    handleAccelerateSound(false);
                     break;
                 case 'ArrowLeft':
                     $.state.keypress.left = false; 
@@ -211,8 +261,17 @@
                 drawRoad(3, 24, 0, $.ctx.createPattern($.canvas2, 'repeat'));
                 drawCar();
                 drawHUD($.ctx, 630, 340, $.colors.hud);
+                drawDistance($.ctx, 120, 50, $.colors.hud);
                 requestAnimationFrame(draw);
             }, 1000 / $.settings.fps);
+        }
+
+        function drawDistance(ctx, x, y, color) {
+            ctx.font = "24px Arial";
+            ctx.fillStyle = color;
+            ctx.textAlign = "left";
+            const distance = Math.floor($.state.totalDistance / 10);
+            ctx.fillText(`Distance: ${distance}m`, x, y);
         }
 
         function drawHUD(ctx, centerX, centerY, color) {
@@ -292,6 +351,7 @@
             $.state.xpos -= ($.state.currentCurve * $.state.speed) * 0.005;
 
             $.state.distanceTraveled += $.state.speed;
+            $.state.totalDistance += $.state.speed;
 
             if ($.state.distanceTraveled >= $.state.dayNightCycleDistance) {
                 $.state.isNight = !$.state.isNight;
